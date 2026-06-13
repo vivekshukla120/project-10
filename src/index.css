@@ -1,0 +1,50 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-kc-bg text-kc-text font-sans antialiased;
+    margin: 0;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .kc-btn-primary {
+    @apply bg-kc-green hover:bg-kc-green-hover text-black font-semibold rounded-lg transition-colors;
+  }
+
+  .kc-btn-outline {
+    @apply border border-kc-border text-kc-text hover:border-kc-green rounded-lg transition-colors;
+  }
+
+  .kc-card {
+    @apply bg-kc-surface border border-kc-border rounded-xl;
+  }
+}
