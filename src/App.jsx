@@ -21,13 +21,13 @@ function App() {
 
         <div className="flex-1">
           <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/markets" element={<Markets />} />
-          <Route path="/trade" element={<Trade />} />
-          <Route path="/futures" element={<Futures />} />
-          <Route path="/earn" element={<Earn />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/markets" element={<Markets />} />
+            <Route path="/trade" element={<Trade />} />
+            <Route path="/futures" element={<Futures />} />
+            <Route path="/earn" element={<Earn />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
           </Routes>
         </div>
 

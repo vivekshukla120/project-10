@@ -1,27 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaStar, FaSearch } from "react-icons/fa";
-import {
-  marketTableData,
-  marketTabs,
-  categoryTags,
-} from "../../data/marketData";
+import api from "../../services/api";
+import { marketTableData, marketTabs, categoryTags } from "../../data/marketData";
+
+function formatPrice(price) {
+  if (price >= 1) return price.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  return price.toFixed(4);
+}
+
+function formatLarge(num) {
+  if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+  if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+  if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+  return `$${num.toLocaleString()}`;
+}
 
 export default function MarketsTable() {
   const [activeTab, setActiveTab] = useState("All");
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
+  const [coins, setCoins] = useState(marketTableData);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = marketTableData.filter((coin) => {
+  useEffect(() => {
+    api
+      .get("/markets")
+      .then(({ data }) => {
+        const mapped = data.map((coin, index) => ({
+          rank: index + 1,
+          symbol: coin.symbol?.toUpperCase(),
+          name: coin.name,
+          price: formatPrice(coin.current_price),
+          change1h: `${coin.price_change_percentage_1h_in_currency?.toFixed(2) ?? "0.00"}%`,
+          change4h: `${((coin.price_change_percentage_24h ?? 0) / 6).toFixed(2)}%`,
+          change24h: `${coin.price_change_percentage_24h?.toFixed(2) ?? "0.00"}%`,
+          markets: "Spot",
+          marketCap: formatLarge(coin.market_cap),
+          volume: formatLarge(coin.total_volume),
+          positive: (coin.price_change_percentage_24h ?? 0) >= 0,
+          image: coin.image,
+        }));
+        setCoins(mapped);
+      })
+      .catch(() => setCoins(marketTableData))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = coins.filter((coin) => {
     const q = search.toLowerCase();
-    const matchSearch =
+    return (
       coin.name.toLowerCase().includes(q) ||
-      coin.symbol.toLowerCase().includes(q);
-    return matchSearch;
+      coin.symbol.toLowerCase().includes(q)
+    );
   });
 
   return (
     <div>
-      {/* Tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-kc-border pb-0">
         {marketTabs.map((tab) => (
           <button
@@ -39,8 +73,7 @@ export default function MarketsTable() {
         ))}
       </div>
 
-      {/* Category tags */}
-      <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-4 mb-4">
         {categoryTags.map((tag) => (
           <button
             key={tag}
@@ -57,7 +90,6 @@ export default function MarketsTable() {
         ))}
       </div>
 
-      {/* Search */}
       <div className="relative mb-4">
         <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-kc-muted text-sm" />
         <input
@@ -69,8 +101,10 @@ export default function MarketsTable() {
         />
       </div>
 
-      {/* Table */}
       <div className="kc-card overflow-hidden">
+        {loading && (
+          <p className="text-kc-muted text-sm p-6 text-center">Loading live market data...</p>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
             <thead>
@@ -81,15 +115,9 @@ export default function MarketsTable() {
                 <th className="text-right px-4 py-4 font-medium">1h</th>
                 <th className="text-right px-4 py-4 font-medium">4h</th>
                 <th className="text-right px-4 py-4 font-medium">24h</th>
-                <th className="text-left px-4 py-4 font-medium hidden xl:table-cell">
-                  Markets
-                </th>
-                <th className="text-right px-4 py-4 font-medium hidden lg:table-cell">
-                  Market Cap
-                </th>
-                <th className="text-right px-4 py-4 font-medium hidden lg:table-cell">
-                  24h Volume
-                </th>
+                <th className="text-left px-4 py-4 font-medium hidden xl:table-cell">Markets</th>
+                <th className="text-right px-4 py-4 font-medium hidden lg:table-cell">Market Cap</th>
+                <th className="text-right px-4 py-4 font-medium hidden lg:table-cell">24h Volume</th>
                 <th className="text-right px-4 py-4 font-medium">Action</th>
               </tr>
             </thead>
@@ -107,13 +135,15 @@ export default function MarketsTable() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-kc-green/15 text-kc-green text-xs font-bold flex items-center justify-center shrink-0">
-                        {coin.symbol.slice(0, 2)}
-                      </div>
+                      {coin.image ? (
+                        <img src={coin.image} alt={coin.symbol} className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-kc-green/15 text-kc-green text-xs font-bold flex items-center justify-center shrink-0">
+                          {coin.symbol.slice(0, 2)}
+                        </div>
+                      )}
                       <div>
-                        <p className="text-white text-sm font-semibold">
-                          {coin.symbol}
-                        </p>
+                        <p className="text-white text-sm font-semibold">{coin.symbol}</p>
                         <p className="text-kc-muted text-xs">{coin.name}</p>
                       </div>
                     </div>
@@ -121,41 +151,20 @@ export default function MarketsTable() {
                   <td className="px-4 py-4 text-right text-white text-sm font-medium">
                     ${coin.price}
                   </td>
-                  <td
-                    className={`px-4 py-4 text-right text-sm ${
-                      coin.positive ? "text-kc-green" : "text-kc-red"
-                    }`}
-                  >
+                  <td className={`px-4 py-4 text-right text-sm ${coin.positive ? "text-kc-green" : "text-kc-red"}`}>
                     {coin.change1h}
                   </td>
-                  <td
-                    className={`px-4 py-4 text-right text-sm ${
-                      coin.positive ? "text-kc-green" : "text-kc-red"
-                    }`}
-                  >
+                  <td className={`px-4 py-4 text-right text-sm ${coin.positive ? "text-kc-green" : "text-kc-red"}`}>
                     {coin.change4h}
                   </td>
-                  <td
-                    className={`px-4 py-4 text-right text-sm font-medium ${
-                      coin.positive ? "text-kc-green" : "text-kc-red"
-                    }`}
-                  >
+                  <td className={`px-4 py-4 text-right text-sm font-medium ${coin.positive ? "text-kc-green" : "text-kc-red"}`}>
                     {coin.change24h}
                   </td>
-                  <td className="px-4 py-4 text-kc-muted text-xs hidden xl:table-cell">
-                    {coin.markets}
-                  </td>
-                  <td className="px-4 py-4 text-right text-kc-muted text-sm hidden lg:table-cell">
-                    {coin.marketCap}
-                  </td>
-                  <td className="px-4 py-4 text-right text-kc-muted text-sm hidden lg:table-cell">
-                    {coin.volume}
-                  </td>
+                  <td className="px-4 py-4 text-kc-muted text-xs hidden xl:table-cell">{coin.markets}</td>
+                  <td className="px-4 py-4 text-right text-kc-muted text-sm hidden lg:table-cell">{coin.marketCap}</td>
+                  <td className="px-4 py-4 text-right text-kc-muted text-sm hidden lg:table-cell">{coin.volume}</td>
                   <td className="px-4 py-4 text-right">
-                    <button
-                      type="button"
-                      className="px-4 py-1.5 text-xs font-semibold kc-btn-primary"
-                    >
+                    <button type="button" className="px-4 py-1.5 text-xs font-semibold kc-btn-primary">
                       Trade
                     </button>
                   </td>

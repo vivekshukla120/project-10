@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const watchlistSchema = new mongoose.Schema(
+const portfolioSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -8,8 +8,13 @@ const watchlistSchema = new mongoose.Schema(
     },
 
     symbol: String,
+
+    quantity: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true },
 );
 
-module.exports = mongoose.model("Watchlist", watchlistSchema);
+module.exports = mongoose.model("Portfolio", portfolioSchema);

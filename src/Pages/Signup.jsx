@@ -1,105 +1,113 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  FaEnvelope,
-  FaLock,
-  FaEye,
-  FaEyeSlash,
-  FaUser,
-} from "react-icons/fa";
-import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import api from "../services/api";
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Signup Submitted");
+    setLoading(true);
+    try {
+      await api.post("/auth/register", formData);
+      alert("Account created successfully!");
+      navigate("/login");
+    } catch (error) {
+      // alert(error.response?.data?.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center px-4 py-10 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-green-500/10 blur-[180px] rounded-full" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 blur-[180px] rounded-full" />
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md kc-card p-8">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-xl bg-kc-green flex items-center justify-center mx-auto mb-4">
+            <span className="text-black font-extrabold text-lg">K</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white">Create KuCoin Account</h1>
+          <p className="text-kc-muted text-sm mt-2">Start trading in minutes</p>
+        </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 35 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-white">Create Account</h2>
-            <p className="text-gray-400 mt-3">Start your crypto trading journey</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm text-kc-muted mb-2">Full Name</label>
+            <div className="relative">
+              <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-kc-muted" />
+              <input
+                name="name"
+                type="text"
+                required
+                placeholder="Enter your name"
+                onChange={handleChange}
+                className="w-full bg-kc-card border border-kc-border rounded-lg pl-11 pr-4 py-3 text-white placeholder-kc-muted outline-none focus:border-kc-green transition"
+              />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            <div>
-              <label className="block text-gray-300 mb-2">Full Name</label>
-              <div className="relative">
-                <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Enter your name"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#131A22] border border-white/10 text-white placeholder-gray-500 outline-none focus:border-green-500"
-                  required
-                />
-              </div>
+          <div>
+            <label className="block text-sm text-kc-muted mb-2">Email</label>
+            <div className="relative">
+              <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-kc-muted" />
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="Enter your email"
+                onChange={handleChange}
+                className="w-full bg-kc-card border border-kc-border rounded-lg pl-11 pr-4 py-3 text-white placeholder-kc-muted outline-none focus:border-kc-green transition"
+              />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-gray-300 mb-2">Email Address</label>
-              <div className="relative">
-                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#131A22] border border-white/10 text-white placeholder-gray-500 outline-none focus:border-green-500"
-                  required
-                />
-              </div>
+          <div>
+            <label className="block text-sm text-kc-muted mb-2">Password</label>
+            <div className="relative">
+              <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-kc-muted" />
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={6}
+                placeholder="Create a password"
+                onChange={handleChange}
+                className="w-full bg-kc-card border border-kc-border rounded-lg pl-11 pr-11 py-3 text-white placeholder-kc-muted outline-none focus:border-kc-green transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-kc-muted"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-gray-300 mb-2">Password</label>
-              <div className="relative">
-                <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
-                  className="w-full pl-12 pr-12 py-4 rounded-xl bg-[#131A22] border border-white/10 text-white placeholder-gray-500 outline-none focus:border-green-500"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-            </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 kc-btn-primary text-sm mt-2 disabled:opacity-60"
+          >
+            {loading ? "Creating account..." : "Sign Up"}
+          </button>
+        </form>
 
-            <button
-              type="submit"
-              className="w-full py-4 rounded-xl bg-green-500 hover:bg-green-400 transition-all duration-300 text-black font-bold"
-            >
-              Sign Up
-            </button>
-          </form>
-
-          <p className="text-center text-gray-400 mt-8">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-green-400 hover:text-green-300 font-medium"
-            >
-              Sign In
-            </Link>
-          </p>
-        </div>
-      </motion.div>
+        <p className="text-center text-kc-muted text-sm mt-6">
+          Already have an account?{" "}
+          <Link to="/login" className="text-kc-green hover:underline font-medium">
+            Log In
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
